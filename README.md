@@ -9,7 +9,7 @@ The dataset used in this project can be found on [Kaggle](https://www.kaggle.com
 
 Contents:
 - data - original and pre-processed data files
-- docs - version history, report, screencast
+- docs - deliverables needed for the submission
 - misc - miscellaneous files needed for GitHub
 - scripts - cleaning and EDA code
 - app - Shiny for Python application
