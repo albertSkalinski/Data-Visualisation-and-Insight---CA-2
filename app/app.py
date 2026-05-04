@@ -11,7 +11,8 @@ from sklearn.cluster import KMeans
 # Importing the cleaned data
 df = pd.read_csv(
     "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/data/preprocessed/cleanData.csv")
-df["activityDate"] = pd.to_datetime(df["activityDate"])
+df["activityDate"] = pd.to_datetime(df["activityDate"], unit = "ns")
+df["activityDateText"] = df["activityDate"].dt.strftime("%d %b %Y")
 
 userSummary = pd.read_csv(
     "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/data/preprocessed/userSummary.csv")
@@ -42,49 +43,115 @@ appUI = ui.page_navbar(
 
     # Page 1 - landing page
     ui.nav_panel("Landing Page",
+
+    ui.div(
         ui.h1("Wearable Fitness Activity Dashboard"),
+        ui.h3("Exploring daily activity patterns from fitness tracker data"),
         ui.p(
-            "This dashboard explores daily physical activity data collected from wearable fitness trackers."),
-        ui.p(
-            "The aim of the dashboard is to help users understand activity patterns, compare users, "
-            "and investigate how steps, distance, activity intensity, and sedentary behaviour relate "
-            "to calories burned."),
+            "This interactive dashboard allows users to explore daily physical activity, "
+            "compare individuals, and investigate how steps, distance, activity intensity, "
+            "and sedentary behaviour relate to calories burned."),
+        class_ = "hero-section"),
 
-        ui.h3("Target audience"),
-        ui.p(
-            "The dashboard is designed for general users interested in fitness, health behaviour, "
-            "and wearable-device data."),
+    ui.layout_columns(
+        ui.card(
+            ui.h3("Project Aim"),
+            ui.p(
+                "The aim of this dashboard is to help a general audience understand "
+                "patterns in wearable fitness data through interactive visualisations."),
+            ui.p(
+                "The app focuses on activity trends, calorie relationships, and user-level "
+                "differences in behaviour.")),
 
-        ui.h3("How to use the dashboard"),
-        ui.p(
-            "Use the tabs at the top of the app to move through the project. The Overview page gives "
-            "a quick summary of the dataset. Activity Trends allows you to filter by user and metric. "
-            "Calories & Relationships explores links between activity variables and calories burned. "
-            "User Comparison / Clustering compares users and groups them into activity profiles."),
+        ui.card(
+            ui.h3("Target Audience"),
+            ui.p(
+                "This dashboard is designed for users interested in fitness, health behaviour, "
+                "wearable devices, and data-driven activity tracking."),
+            ui.p(
+                "It does not require technical knowledge and is intended to be easy to explore.")),
 
-        ui.h3("Important data note"),
+        col_widths = (6, 6)),
+
+    ui.layout_columns(
+        ui.card(
+            ui.h3("What Can You Explore?"),
+            ui.tags.ul(
+                ui.tags.li("Overall activity levels across the dataset"),
+                ui.tags.li("Daily and weekly activity trends"),
+                ui.tags.li("Relationships between steps, distance, active minutes, and calories"),
+                ui.tags.li("Differences between individual users"),
+                ui.tags.li("User groups created using K-means clustering"))),
+
+        ui.card(
+            ui.h3("Dataset Summary"),
+            ui.tags.ul(
+                ui.tags.li("Daily activity records from wearable fitness trackers"),
+                ui.tags.li("Includes steps, distance, activity minutes, sedentary minutes, and calories"),
+                ui.tags.li("Covers multiple anonymised users"),
+                ui.tags.li("Cleaned by combining CSV files, removing duplicates, and creating new features"))),
+
+        col_widths = (6, 6)),
+
+    ui.card(
+        ui.h3("How to Use the Dashboard"),
+        ui.layout_columns(
+            ui.div(
+                ui.h4("1. Start with Overview"),
+                ui.p("View headline statistics and overall activity patterns."),
+                class_ = "step-box"),
+            ui.div(
+                ui.h4("2. Explore Trends"),
+                ui.p("Filter by user, date range, and activity metric."),
+                class_ = "step-box"),
+            ui.div(
+                ui.h4("3. Analyse Calories"),
+                ui.p("Investigate which activity variables relate most strongly to calories."),
+                class_ = "step-box"),
+            ui.div(
+                ui.h4("4. Compare Users"),
+                ui.p("Use clustering to identify broad user activity profiles."),
+                class_ = "step-box"),
+            col_widths = (3, 3, 3, 3))),
+
+    ui.div(
+        ui.h4("Important Data Note"),
         ui.p(
-            "Some records contain zero steps or zero distance. These values were kept because they may "
-            "represent inactive days, rest days, or missing tracking periods.")),
+            "Some records contain zero steps or zero distance. These values were kept because "
+            "they may represent inactive days, rest days, or missing tracking periods. Derived "
+            "metrics such as calories per step were only calculated where division was valid."),
+        class_ = "page-note")),
 
     # Page 2 - overview
     ui.nav_panel("Overview",
         ui.h1("Overview of the Dataset"),
+        ui.div(
+            ui.p(
+                "This page provides a high-level summary of the activity-tracker dataset, "
+                "including the number of users, number of daily records, average steps, and "
+                "average calories burned."),
+            class_ = "page-note"),
+        ui.div(
+            ui.p(
+                "Overall, users averaged approximately 7,247 steps and 2,264 calories per day. "
+                "The activity breakdown also shows that sedentary minutes make up the largest "
+                "part of the recorded day."),
+            class_ = "page-note"),
+
 
         ui.layout_columns(
             ui.card(
                 ui.h4("Number of users"),
-                ui.output_text("totalUsers")),
+                ui.div(ui.output_text("totalUsers"), class_ = "value-text")),
             ui.card(
                 ui.h4("Number of daily records"),
-                ui.output_text("totalRecords")),
+                ui.div(ui.output_text("totalRecords"), class_ = "value-text")),
             ui.card(
                 ui.h4("Average daily steps"),
-                ui.output_text("averageSteps")),
+                ui.div(ui.output_text("averageSteps"), class_ = "value-text")),
             ui.card(
                 ui.h4("Average daily calories"),
-                ui.output_text("averageCalories")),
-            col_widths = (3, 3, 3, 3)),
+                ui.div(ui.output_text("averageCalories"), class_ = "value-text"))),
 
         ui.layout_columns(
             ui.card(
@@ -98,23 +165,34 @@ appUI = ui.page_navbar(
     # Page 3 - activity trends
     ui.nav_panel("Activity Trends",
         ui.h1("Activity Trends"),
+        ui.div(
+            ui.p(
+                "This page allows users to explore how activity changes over time. The filters "
+                "can be used to view all users or a selected individual user, choose a date range, "
+                "and switch between different activity metrics."),
+            class_ = "page-note"),
+        ui.div(
+            ui.p(
+                "The weekday chart shows that Saturday had the highest average steps, while "
+                "Sunday had the lowest average steps in this dataset."),
+            class_ = "page-note"),
 
         ui.layout_sidebar(
             ui.sidebar(
                 ui.input_selectize(
-                    "userSelect",
+                    "user_select",
                     "Select user:",
                     choices = userChoices,
                     selected = "All users"),
 
                 ui.input_date_range(
-                    "dateSelect",
+                    "date_select",
                     "Select date range:",
                     start = df["activityDate"].min().date(),
                     end = df["activityDate"].max().date()),
 
                 ui.input_selectize(
-                    "metricSelect",
+                    "metric_select",
                     "Select metric:",
                     choices = metricChoices,
                     selected = "totalSteps")),
@@ -130,17 +208,29 @@ appUI = ui.page_navbar(
     # Page 4 - calories & relationships
     ui.nav_panel("Calories & Relationships",
         ui.h1("Calories & Relationships"),
+        ui.div(
+            ui.p(
+                "This page investigates how different activity variables relate to calories burned. "
+                "Users can choose the variable shown on the x-axis and decide whether to display "
+                "a trendline."),
+            class_ = "page-note"),
+        ui.div(
+            ui.p(
+                "The correlation heatmap suggests that calories are most strongly related to total "
+                "distance, total steps, and very active minutes. Sedentary minutes show very little "
+                "relationship with calories."),
+            class_ = "page-note"),
 
         ui.layout_sidebar(
             ui.sidebar(
                 ui.input_selectize(
-                    "xSelect",
+                    "x_select",
                     "Select x-axis variable:",
                     choices = relationshipChoices,
                     selected = "totalDistance"),
 
                 ui.input_checkbox(
-                    "trendlineSelect",
+                    "trendline_select",
                     "Show trendline",
                     value = True)),
 
@@ -155,18 +245,28 @@ appUI = ui.page_navbar(
     # Page 4 - user comparison/clustering
     ui.nav_panel("User Comparison/Clustering",
         ui.h1("User Comparison and Clustering"),
+        ui.div(
+            ui.p(
+                "This page compares users based on their average daily activity. K-means clustering "
+                "is used to group users into broad activity profiles."),
+            class_ = "page-note"),
+        ui.div(
+            ui.p(
+                "The clusters suggest three general user types: lower activity users, moderate "
+                "activity users, and high activity or high calorie users."),
+            class_ = "page-note"),
 
         ui.layout_sidebar(
             ui.sidebar(
                 ui.input_slider(
-                    "clusterNumber",
+                    "cluster_number",
                     "Number of clusters:",
                     min = 2,
                     max = 5,
                     value = 3),
 
                 ui.input_checkbox_group(
-                    "clusterFeatures",
+                    "cluster_features",
                     "Select features for clustering:",
                     choices = clusterChoices,
                     selected = [
@@ -189,7 +289,8 @@ appUI = ui.page_navbar(
                 ui.h3("User Summary Table"),
                 ui.output_data_frame("userSummaryTable")))),
 
-    title = "Fitness Activity Dashboard")
+    title = "Fitness Activity Dashboard",
+    header = ui.include_css("C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/app/styles.css"))
 
 # Server
 def server(input, output, session):
@@ -208,20 +309,25 @@ def server(input, output, session):
     @output
     @render.text
     def averageSteps():
-        return str(round(df["totalSteps"].mean(), 0))
+        return int(round(df["totalSteps"].mean(), 0))
 
     @output
     @render.text
     def averageCalories():
-        return str(round(df["calories"].mean(), 0))
+        return int(round(df["calories"].mean(), 0))
 
     @output
     @render_widget
     def dailyStepsPlot():
         dailySteps = df.groupby("activityDate")["totalSteps"].mean().reset_index()
 
-        fig = px.line(dailySteps,x = "activityDate", y = "totalSteps", title = "Average Daily Steps Over Time", labels = {
-                     "activityDate":"Date", "totalSteps":"Average Steps"})
+        dailySteps["activityDate"] = pd.to_datetime(dailySteps["activityDate"])
+        dailySteps = dailySteps.sort_values("activityDate")
+        dailySteps["activityDateText"] = dailySteps["activityDate"].dt.strftime("%d %b %Y")
+
+        fig = px.line(dailySteps, x = "activityDateText", y = "totalSteps", title = "Average Daily Steps Over Time", labels = {
+                     "activityDateText":"Date", "totalSteps":"Average Steps"})
+        fig.update_xaxes(tickmode = "array", tickvals = dailySteps["activityDateText"][::7], tickangle = -45)
 
         return fig
 
@@ -258,8 +364,14 @@ def server(input, output, session):
             plotDF = filteredDF[["activityDate", selectedMetric]]
             yLabel = metricChoices[selectedMetric]
 
-        fig = px.line(plotDF, x = "activityDate", y = selectedMetric,
-            title = metricChoices[selectedMetric] + " Over Time", labels = {"activityDate":"Date", selectedMetric:yLabel})
+        plotDF["activityDate"] = pd.to_datetime(plotDF["activityDate"])
+        plotDF = plotDF.sort_values("activityDate")
+        plotDF["activityDateText"] = plotDF["activityDate"].dt.strftime("%d %b %Y")
+
+        fig = px.line(plotDF, x = "activityDateText", y = selectedMetric,
+            title = metricChoices[selectedMetric] + " Over Time", labels = {"activityDateText":"Date", selectedMetric:yLabel})
+
+        fig.update_xaxes(tickmode = "array", tickvals = plotDF["activityDateText"][::7], tickangle = -45)
 
         return fig
 
