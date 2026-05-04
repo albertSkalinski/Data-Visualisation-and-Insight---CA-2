@@ -3,21 +3,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+import os
 from shiny import App, render, ui
 from shinywidgets import output_widget, render_widget
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
 # Importing cleaned data
-df = pd.read_csv(
-    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/"
-    "Data-Visualisation-and-Insight---CA-2/data/preprocessed/cleanData.csv")
+baseDir = os.path.dirname(os.path.abspath(__file__))
+df = pd.read_csv(baseDir + "/cleanData.csv")
 df["activityDate"] = pd.to_datetime(df["activityDate"], unit = "ns")
 df["activityDateText"] = df["activityDate"].dt.strftime("%d %b %Y")
 
-userSummary = pd.read_csv(
-    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/"
-    "Data-Visualisation-and-Insight---CA-2/data/preprocessed/userSummary.csv")
+userSummary = pd.read_csv(baseDir + "/userSummary.csv")
 
 # Converting ID to string so it works nicely in dropdowns
 df["ID"] = df["ID"].astype(str)
@@ -271,8 +269,7 @@ appUI = ui.page_navbar(
                 ui.output_data_frame("userSummaryTable")))),
 
     title = "Fitness Activity Dashboard",
-    header = ui.include_css("C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/"
-                            "Data-Visualisation-and-Insight---CA-2/app/styles.css"))
+    header = ui.include_css(baseDir + "/styles.css"))
 
 # Server
 def server(input, output, session):
