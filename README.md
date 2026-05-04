@@ -6,7 +6,7 @@
 The dataset used in this project can be found on [Kaggle](https://www.kaggle.com/datasets/arashnic/fitbit/data).
 
 The project has been developed with the aid of AI (ChatGPT).
-All the prompts and the entire conversation can be found here: [ChatGPT](https://chatgpt.com/share/69f88570-0324-8390-b017-dadbbc3d232a).
+All the prompts and the entire conversation can be found here: [ChatGPT](https://chatgpt.com/share/69f8fe77-37ec-8391-a530-27ff6727fe52).
 
 ---
 
