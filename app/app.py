@@ -1,0 +1,372 @@
+# Importing Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+from shiny import App, render, ui
+from shinywidgets import output_widget, render_widget
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
+# Importing the cleaned data
+df = pd.read_csv(
+    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/data/preprocessed/cleanData.csv")
+df["activityDate"] = pd.to_datetime(df["activityDate"])
+
+userSummary = pd.read_csv(
+    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/data/preprocessed/userSummary.csv")
+
+# Converting ID to string so it works nicely in dropdowns
+df["ID"] = df["ID"].astype(str)
+userSummary["ID"] = userSummary["ID"].astype(str)
+
+# Choices for inputs
+uniqueUsers = df["ID"].unique()
+userChoices = {"All users":"All users"}
+
+for user in uniqueUsers:
+    userChoices[user] = user
+
+metricChoices = {"totalSteps":"Total Steps", "totalDistance":"Total Distance", "calories":"Calories", "activeMinutes":"Active Minutes",
+                "sedentaryMinutes":"Sedentary Minutes"}
+
+relationshipChoices = {"totalSteps":"Total Steps", "totalDistance":"Total Distance", "veryActiveMinutes":"Very Active Minutes",
+                      "fairlyActiveMinutes":"Fairly Active Minutes", "lightlyActiveMinutes":"Lightly Active Minutes",
+                      "activeMinutes":"Active Minutes", "sedentaryMinutes":"Sedentary Minutes"}
+
+clusterChoices = {"totalSteps":"Total Steps", "totalDistance":"Total Distance", "veryActiveMinutes":"Very Active Minutes",
+                 "lightlyActiveMinutes":"Lightly Active Minutes", "sedentaryMinutes":"Sedentary Minutes", "calories":"Calories"}
+
+# App UI
+appUI = ui.page_navbar(
+
+    # Page 1 - landing page
+    ui.nav_panel("Landing Page",
+        ui.h1("Wearable Fitness Activity Dashboard"),
+        ui.p(
+            "This dashboard explores daily physical activity data collected from wearable fitness trackers."),
+        ui.p(
+            "The aim of the dashboard is to help users understand activity patterns, compare users, "
+            "and investigate how steps, distance, activity intensity, and sedentary behaviour relate "
+            "to calories burned."),
+
+        ui.h3("Target audience"),
+        ui.p(
+            "The dashboard is designed for general users interested in fitness, health behaviour, "
+            "and wearable-device data."),
+
+        ui.h3("How to use the dashboard"),
+        ui.p(
+            "Use the tabs at the top of the app to move through the project. The Overview page gives "
+            "a quick summary of the dataset. Activity Trends allows you to filter by user and metric. "
+            "Calories & Relationships explores links between activity variables and calories burned. "
+            "User Comparison / Clustering compares users and groups them into activity profiles."),
+
+        ui.h3("Important data note"),
+        ui.p(
+            "Some records contain zero steps or zero distance. These values were kept because they may "
+            "represent inactive days, rest days, or missing tracking periods.")),
+
+    # Page 2 - overview
+    ui.nav_panel("Overview",
+        ui.h1("Overview of the Dataset"),
+
+        ui.layout_columns(
+            ui.card(
+                ui.h4("Number of users"),
+                ui.output_text("totalUsers")),
+            ui.card(
+                ui.h4("Number of daily records"),
+                ui.output_text("totalRecords")),
+            ui.card(
+                ui.h4("Average daily steps"),
+                ui.output_text("averageSteps")),
+            ui.card(
+                ui.h4("Average daily calories"),
+                ui.output_text("averageCalories")),
+            col_widths = (3, 3, 3, 3)),
+
+        ui.layout_columns(
+            ui.card(
+                ui.h3("Average Daily Steps Over Time"),
+                output_widget("dailyStepsPlot")),
+            ui.card(
+                ui.h3("Average Daily Minutes by Activity Type"),
+                output_widget("activityMinutesPlot")),
+            col_widths = (6, 6))),
+
+    # Page 3 - activity trends
+    ui.nav_panel("Activity Trends",
+        ui.h1("Activity Trends"),
+
+        ui.layout_sidebar(
+            ui.sidebar(
+                ui.input_selectize(
+                    "userSelect",
+                    "Select user:",
+                    choices = userChoices,
+                    selected = "All users"),
+
+                ui.input_date_range(
+                    "dateSelect",
+                    "Select date range:",
+                    start = df["activityDate"].min().date(),
+                    end = df["activityDate"].max().date()),
+
+                ui.input_selectize(
+                    "metricSelect",
+                    "Select metric:",
+                    choices = metricChoices,
+                    selected = "totalSteps")),
+
+            ui.card(
+                ui.h3("Selected Metric Over Time"),
+                output_widget("metricTimePlot")),
+
+            ui.card(
+                ui.h3("Average Steps by Weekday"),
+                output_widget("weekdayStepsPlot")))),
+
+    # Page 4 - calories & relationships
+    ui.nav_panel("Calories & Relationships",
+        ui.h1("Calories & Relationships"),
+
+        ui.layout_sidebar(
+            ui.sidebar(
+                ui.input_selectize(
+                    "xSelect",
+                    "Select x-axis variable:",
+                    choices = relationshipChoices,
+                    selected = "totalDistance"),
+
+                ui.input_checkbox(
+                    "trendlineSelect",
+                    "Show trendline",
+                    value = True)),
+
+            ui.card(
+                ui.h3("Relationship with Calories"),
+                output_widget("calorieScatterPlot")),
+
+            ui.card(
+                ui.h3("Correlation Heatmap"),
+                ui.output_plot("correlationPlot")))),
+
+    # Page 4 - user comparison/clustering
+    ui.nav_panel("User Comparison/Clustering",
+        ui.h1("User Comparison and Clustering"),
+
+        ui.layout_sidebar(
+            ui.sidebar(
+                ui.input_slider(
+                    "clusterNumber",
+                    "Number of clusters:",
+                    min = 2,
+                    max = 5,
+                    value = 3),
+
+                ui.input_checkbox_group(
+                    "clusterFeatures",
+                    "Select features for clustering:",
+                    choices = clusterChoices,
+                    selected = [
+                        "totalSteps",
+                        "totalDistance",
+                        "veryActiveMinutes",
+                        "lightlyActiveMinutes",
+                        "sedentaryMinutes",
+                        "calories"])),
+
+            ui.card(
+                ui.h3("User Clusters"),
+                output_widget("clusterPlot")),
+
+            ui.card(
+                ui.h3("Cluster Averages"),
+                output_widget("clusterAveragePlot")),
+
+            ui.card(
+                ui.h3("User Summary Table"),
+                ui.output_data_frame("userSummaryTable")))),
+
+    title = "Fitness Activity Dashboard")
+
+# Server
+def server(input, output, session):
+
+    # Page 2 - overview
+    @output
+    @render.text
+    def totalUsers():
+        return str(df["ID"].nunique())
+
+    @output
+    @render.text
+    def totalRecords():
+        return str(len(df))
+
+    @output
+    @render.text
+    def averageSteps():
+        return str(round(df["totalSteps"].mean(), 0))
+
+    @output
+    @render.text
+    def averageCalories():
+        return str(round(df["calories"].mean(), 0))
+
+    @output
+    @render_widget
+    def dailyStepsPlot():
+        dailySteps = df.groupby("activityDate")["totalSteps"].mean().reset_index()
+
+        fig = px.line(dailySteps,x = "activityDate", y = "totalSteps", title = "Average Daily Steps Over Time", labels = {
+                     "activityDate":"Date", "totalSteps":"Average Steps"})
+
+        return fig
+
+    @output
+    @render_widget
+    def activityMinutesPlot():
+        activityMinutes = df[["veryActiveMinutes", "fairlyActiveMinutes", "lightlyActiveMinutes", "sedentaryMinutes"]].mean().reset_index()
+
+        activityMinutes.columns = ["activityType", "averageMinutes"]
+
+        fig = px.bar(activityMinutes, x = "activityType", y = "averageMinutes", title = "Average Daily Minutes by Activity Type",
+                    labels = {"activityType":"Activity Type", "averageMinutes":"Average Minutes"})
+
+        return fig
+
+    # Page 3 - activity trends
+    @output
+    @render_widget
+    def metricTimePlot():
+
+        selectedUser = input.user_select()
+        selectedMetric = input.metric_select()
+        startDate, endDate = input.date_select()
+
+        filteredDF = df[(df["activityDate"] >= pd.to_datetime(startDate)) & (df["activityDate"] <= pd.to_datetime(endDate))]
+
+        if selectedUser != "All users":
+            filteredDF = filteredDF[filteredDF["ID"] == selectedUser]
+
+        if selectedUser == "All users":
+            plotDF = filteredDF.groupby("activityDate")[selectedMetric].mean().reset_index()
+            yLabel = "Average " + metricChoices[selectedMetric]
+        else:
+            plotDF = filteredDF[["activityDate", selectedMetric]]
+            yLabel = metricChoices[selectedMetric]
+
+        fig = px.line(plotDF, x = "activityDate", y = selectedMetric,
+            title = metricChoices[selectedMetric] + " Over Time", labels = {"activityDate":"Date", selectedMetric:yLabel})
+
+        return fig
+
+    @output
+    @render_widget
+    def weekdayStepsPlot():
+
+        weekdaySteps = df.groupby("weekday")["totalSteps"].mean().reset_index()
+
+        weekdayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+        weekdaySteps["weekday"] = pd.Categorical(weekdaySteps["weekday"], categories = weekdayOrder, ordered = True)
+
+        weekdaySteps = weekdaySteps.sort_values("weekday")
+
+        fig = px.bar(weekdaySteps, x = "weekday", y = "totalSteps", title = "Average Steps by Weekday", labels = {
+                    "weekday":"Weekday", "totalSteps":"Average Steps"})
+
+        return fig
+    
+    # Page 4 - calories & relationships
+    @output
+    @render_widget
+    def calorieScatterPlot():
+
+        xVariable = input.x_select()
+
+        if input.trendline_select():
+            fig = px.scatter(df, x = xVariable, y = "calories", color = "stepCategory", trendline = "ols",
+                            title = "Calories Burned vs " + relationshipChoices[xVariable], labels = {xVariable:relationshipChoices[xVariable],
+                            "calories":"Calories", "stepCategory":"Step Category"})
+        else:
+            fig = px.scatter(df, x = xVariable, y = "calories", color = "stepCategory",
+                            title = "Calories Burned vs " + relationshipChoices[xVariable], labels = {xVariable:relationshipChoices[xVariable],
+                            "calories":"Calories", "stepCategory":"Step Category"})
+
+        return fig
+
+    @output
+    @render.plot
+    def correlationPlot():
+
+        correlationColumns = ["totalSteps", "totalDistance", "veryActiveMinutes", "fairlyActiveMinutes", "lightlyActiveMinutes",
+                             "sedentaryMinutes", "activeMinutes", "calories"]
+
+        correlation = df[correlationColumns].corr()
+
+        plt.figure(figsize = (10, 7))
+        sns.heatmap(correlation, annot = True, cmap = "coolwarm", fmt = ".2f")
+        plt.title("Correlation Heatmap of Activity Variables")
+
+    # Page 5 - user comparison/clustering
+    def makeClusteredData():
+
+        selectedFeatures = list(input.cluster_features())
+
+        if len(selectedFeatures) < 2:
+            selectedFeatures = ["totalSteps", "calories"]
+
+        X = userSummary[selectedFeatures]
+
+        scaler = StandardScaler()
+        XScaled = scaler.fit_transform(X)
+
+        kMeans = KMeans(n_clusters=input.cluster_number(), random_state = 42, n_init = 10)
+
+        clusteredData = userSummary.copy()
+        clusteredData["cluster"] = kMeans.fit_predict(XScaled)
+        clusteredData["cluster"] = clusteredData["cluster"].astype(str)
+
+        return clusteredData
+
+    @output
+    @render_widget
+    def clusterPlot():
+
+        clusteredData = makeClusteredData()
+
+        fig = px.scatter(clusteredData, x = "totalSteps", y = "calories", color = "cluster", hover_data = ["ID"],
+                        title = "User Clusters Based on Activity Behaviour", labels = {"totalSteps":"Average Daily Steps",
+                        "calories":"Average Daily Calories", "cluster":"Cluster"})
+
+        return fig
+
+    @output
+    @render_widget
+    def clusterAveragePlot():
+
+        clusteredData = makeClusteredData()
+
+        clusterAverage = clusteredData.groupby("cluster")[["totalSteps", "totalDistance", "veryActiveMinutes", "lightlyActiveMinutes",
+                                                         "sedentaryMinutes", "calories"]].mean().reset_index()
+
+        clusterAverageLong = clusterAverage.melt(id_vars = "cluster", var_name = "variable", value_name = "averageValue")
+
+        fig = px.bar(clusterAverageLong, x = "cluster", y = "averageValue", color = "variable", barmode = "group",
+                    title = "Average Values by Cluster", labels = {"cluster":"Cluster", "averageValue":"Average Value",
+                    "variable":"Variable"})
+
+        return fig
+
+    @output
+    @render.data_frame
+    def userSummaryTable():
+
+        clusteredData = makeClusteredData()
+
+        return render.DataGrid(clusteredData, filters = True)
+
+app = App(appUI, server)
