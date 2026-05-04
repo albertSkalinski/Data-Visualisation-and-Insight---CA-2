@@ -21,4 +21,4 @@ Contents:
 ---
 
 Launching instructions:
-TBC
+The deployed app can be found here: [Fitness Activity Dashboard - Albert Skalinski CA 2](https://019df454-f4ca-1fb2-36e0-40717996d036.share.connect.posit.cloud/).
