@@ -1,0 +1,9 @@
+shiny
+shinywidgets
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+scikit-learn
+statsmodels

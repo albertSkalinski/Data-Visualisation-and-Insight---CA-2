@@ -8,14 +8,16 @@ from shinywidgets import output_widget, render_widget
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
-# Importing the cleaned data
+# Importing cleaned data
 df = pd.read_csv(
-    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/data/preprocessed/cleanData.csv")
+    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/"
+    "Data-Visualisation-and-Insight---CA-2/data/preprocessed/cleanData.csv")
 df["activityDate"] = pd.to_datetime(df["activityDate"], unit = "ns")
 df["activityDateText"] = df["activityDate"].dt.strftime("%d %b %Y")
 
 userSummary = pd.read_csv(
-    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/data/preprocessed/userSummary.csv")
+    "C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/"
+    "Data-Visualisation-and-Insight---CA-2/data/preprocessed/userSummary.csv")
 
 # Converting ID to string so it works nicely in dropdowns
 df["ID"] = df["ID"].astype(str)
@@ -45,10 +47,10 @@ appUI = ui.page_navbar(
     ui.nav_panel("Landing Page",
 
     ui.div(
-        ui.h1("Wearable Fitness Activity Dashboard"),
+        ui.h1("Fitness Activity Dashboard"),
         ui.h3("Exploring daily activity patterns from fitness tracker data"),
         ui.p(
-            "This interactive dashboard allows users to explore daily physical activity, "
+            "This interactive dashboard allows you to explore daily physical activity, "
             "compare individuals, and investigate how steps, distance, activity intensity, "
             "and sedentary behaviour relate to calories burned."),
         class_ = "hero-section"),
@@ -57,8 +59,8 @@ appUI = ui.page_navbar(
         ui.card(
             ui.h3("Project Aim"),
             ui.p(
-                "The aim of this dashboard is to help a general audience understand "
-                "patterns in wearable fitness data through interactive visualisations."),
+                "The aim of this dashboard is to help you understand "
+                "patterns in fitness data through visualisations."),
             ui.p(
                 "The app focuses on activity trends, calorie relationships, and user-level "
                 "differences in behaviour.")),
@@ -67,7 +69,7 @@ appUI = ui.page_navbar(
             ui.h3("Target Audience"),
             ui.p(
                 "This dashboard is designed for users interested in fitness, health behaviour, "
-                "wearable devices, and data-driven activity tracking."),
+                "and data-driven activity tracking."),
             ui.p(
                 "It does not require technical knowledge and is intended to be easy to explore.")),
 
@@ -120,6 +122,10 @@ appUI = ui.page_navbar(
             "Some records contain zero steps or zero distance. These values were kept because "
             "they may represent inactive days, rest days, or missing tracking periods. Derived "
             "metrics such as calories per step were only calculated where division was valid."),
+        ui.p(
+            "The data is anonymised and does not include demographic information. "
+            "Therefore, the dashboard focuses on recorded activity patterns rather "
+            "than making fitness claims about individuals."),
         class_ = "page-note")),
 
     # Page 2 - overview
@@ -127,15 +133,8 @@ appUI = ui.page_navbar(
         ui.h1("Overview of the Dataset"),
         ui.div(
             ui.p(
-                "This page provides a high-level summary of the activity-tracker dataset, "
-                "including the number of users, number of daily records, average steps, and "
-                "average calories burned."),
-            class_ = "page-note"),
-        ui.div(
-            ui.p(
-                "Overall, users averaged approximately 7,247 steps and 2,264 calories per day. "
-                "The activity breakdown also shows that sedentary minutes make up the largest "
-                "part of the recorded day."),
+                "Overall, users averaged ~7200 steps and ~2200 calories a day. "
+                "Sedentary minutes make up the largest part of the recorded day."),
             class_ = "page-note"),
 
 
@@ -167,14 +166,8 @@ appUI = ui.page_navbar(
         ui.h1("Activity Trends"),
         ui.div(
             ui.p(
-                "This page allows users to explore how activity changes over time. The filters "
-                "can be used to view all users or a selected individual user, choose a date range, "
-                "and switch between different activity metrics."),
-            class_ = "page-note"),
-        ui.div(
-            ui.p(
-                "The weekday chart shows that Saturday had the highest average steps, while "
-                "Sunday had the lowest average steps in this dataset."),
+                "Saturday had the highest average steps (weekend, more free time for exercise), " 
+                "whilst Sunday had the lowest (generally considered a 'rest day')."),
             class_ = "page-note"),
 
         ui.layout_sidebar(
@@ -210,15 +203,8 @@ appUI = ui.page_navbar(
         ui.h1("Calories & Relationships"),
         ui.div(
             ui.p(
-                "This page investigates how different activity variables relate to calories burned. "
-                "Users can choose the variable shown on the x-axis and decide whether to display "
-                "a trendline."),
-            class_ = "page-note"),
-        ui.div(
-            ui.p(
-                "The correlation heatmap suggests that calories are most strongly related to total "
-                "distance, total steps, and very active minutes. Sedentary minutes show very little "
-                "relationship with calories."),
+                "Calories are most strongly related to total distance, total steps, and very active minutes. "
+                "Sedentary minutes show very little relationship with calories."),
             class_ = "page-note"),
 
         ui.layout_sidebar(
@@ -245,11 +231,6 @@ appUI = ui.page_navbar(
     # Page 4 - user comparison/clustering
     ui.nav_panel("User Comparison/Clustering",
         ui.h1("User Comparison and Clustering"),
-        ui.div(
-            ui.p(
-                "This page compares users based on their average daily activity. K-means clustering "
-                "is used to group users into broad activity profiles."),
-            class_ = "page-note"),
         ui.div(
             ui.p(
                 "The clusters suggest three general user types: lower activity users, moderate "
@@ -290,7 +271,8 @@ appUI = ui.page_navbar(
                 ui.output_data_frame("userSummaryTable")))),
 
     title = "Fitness Activity Dashboard",
-    header = ui.include_css("C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/Data-Visualisation-and-Insight---CA-2/app/styles.css"))
+    header = ui.include_css("C:/Users/sKALa/Repos/Semester 2/Data Visualisation and Insight/CAs/CA 2/"
+                            "Data-Visualisation-and-Insight---CA-2/app/styles.css"))
 
 # Server
 def server(input, output, session):
@@ -479,6 +461,20 @@ def server(input, output, session):
 
         clusteredData = makeClusteredData()
 
-        return render.DataGrid(clusteredData, filters = True)
+        tableData = clusteredData.copy()
+
+        # Round float columns to 2 decimal places
+        floatColumns = tableData.select_dtypes(include = "float").columns
+
+        for col in floatColumns:
+            tableData[col] = tableData[col].round(2)
+
+        # Convert integer columns to int
+        intColumns = tableData.select_dtypes(include = "integer").columns
+
+        for col in intColumns:
+            tableData[col] = tableData[col].astype(int)
+
+        return render.DataGrid(tableData, filters = True)
 
 app = App(appUI, server)
